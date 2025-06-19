@@ -1,6 +1,7 @@
 package com.eazybytes.accounts.controller;
 
 import com.eazybytes.accounts.constants.AccountsConstants;
+import com.eazybytes.accounts.dto.AccountsContactInfoDto;
 import com.eazybytes.accounts.dto.CustomerDto;
 import com.eazybytes.accounts.dto.ErrorResponseDto;
 import com.eazybytes.accounts.dto.ResponseDto;
@@ -57,6 +58,9 @@ public class AccountsController {
 
     @Autowired
     private Environment environment;
+
+    @Autowired
+    private AccountsContactInfoDto accountsContactInfoDto;
 
     @Operation(
             summary = "Create new account in EazyBank",
@@ -189,6 +193,7 @@ public class AccountsController {
         }
     }
 
+    //  Approach 1: Read the build version using @Value annotation
     @Operation(
             summary = "Get Build Information",
             description = "Get Build information that is deployed into accounts microservice"
@@ -214,6 +219,7 @@ public class AccountsController {
                 .body(buildVersion);
     }
 
+    //  Approach 2: Read the build version using Environment Interface
     //  Read the JAVA_HOME environment variable form environment(local system) and send the same as response to the client application
     @Operation(
             summary = "Get Java Version",
@@ -238,5 +244,36 @@ public class AccountsController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(environment.getProperty("JAVA_HOME"));
+    }
+
+    // Approach 3: Read the contact info using @ConfigurationProperties annotation
+    /*
+     * This approach removes limitations:
+     * 1. Hardcoding property key names in the code
+     * 2. Read properties one at a time
+     * */
+    @Operation(
+            summary = "Get Contact Info",
+            description = "Contact Info details that can be reached out in case of any issues"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    }
+    )
+    @GetMapping("/contact-info")
+    public ResponseEntity<AccountsContactInfoDto> getContactInfo() {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(accountsContactInfoDto);
     }
 }
