@@ -13,8 +13,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public class AccountsController {
 
     private final IAccountsService iAccountsService;
 
-//  AutoWiring only-one dependency bean of a particular type
+    //  AutoWiring only-one dependency bean of a particular type
     public AccountsController(IAccountsService iAccountsService) {
         this.iAccountsService = iAccountsService;
     }
@@ -53,6 +54,9 @@ public class AccountsController {
     // @Value("${build.version}") is a property placeholder that is resolved at runtime by Spring's property placeholder
     // mechanism. It looks for a property named and injects its value into the buildVersion field.
     // Below is REST API to fetch build version
+
+    @Autowired
+    private Environment environment;
 
     @Operation(
             summary = "Create new account in EazyBank",
@@ -208,5 +212,31 @@ public class AccountsController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(buildVersion);
+    }
+
+    //  Read the JAVA_HOME environment variable form environment(local system) and send the same as response to the client application
+    @Operation(
+            summary = "Get Java Version",
+            description = "Get Java version details that is installed into accounts microservice"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponseDto.class)
+                    )
+            )
+    }
+    )
+    @GetMapping("/java-version")
+    public ResponseEntity<String> getJavaVersion() {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(environment.getProperty("JAVA_HOME"));
     }
 }
