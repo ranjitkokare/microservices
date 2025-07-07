@@ -1,0 +1,47 @@
+# Network related services which are common to all services
+# Service 1: network-deploy-service
+services:
+  network-deploy-service:
+    #   we use networks to connect multiple containers together so that they can communicate with each other
+    networks:
+      - eazybank
+
+  microservice-db-config:
+    extends:
+      service: network-deploy-service
+    image: mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+
+  # Microservice related services which are common to all services
+  # Service 2: microservice-base-config
+  microservice-base-config:
+    extends:
+      service: network-deploy-service
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+
+  # Service 3: microservice-configserver-config
+  microservice-configserver-config:
+    extends:
+      service: microservice-base-config
+    depends_on:
+      configserver:
+        condition: service_healthy
+    environment:
+      #   we remove optional from here because we want accounts microservice to be failed,
+      #   in case if it is not connect with config server
+      #   prefix means 1st 'configserver' must be there.
+      #   But 2nd 'configserver' is service name we can based on a service name
+      SPRING_PROFILES_ACTIVE: qa
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
