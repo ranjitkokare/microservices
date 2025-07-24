@@ -1,0 +1,60 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: "accounts"
+  profiles:
+    active: "prod"
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ''
+  h2:
+    console:
+      enabled: true
+    jpa:
+      database-platform: org.hibernate.dialect.H2Dialect
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+  config:
+    import: "optional:configserver:http://localhost:8071/"
+#    here optional tells that if account microservice is unable to connect config sever,
+#    it can still continue to start the microservice application.
+
+
+# Enable management related API's by activating actuator API path
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # all management endpoints instead of only refresh
+  #  Allows us to shut down the account microservice gracefully
+  endpoint:
+    shutdown:
+      access: unrestricted
+  info:
+    env:
+      enabled: true
+
+
+# Eureka client configuration
+eureka:
+  instance:
+    # By default, account microservice will try to register itself with hostname(DNS mapping)
+    # But here inside our local system we don't have DNS mapping, so we register it with IP address
+    preferIpAddress: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8070/eureka/
+
+
+# Application information display on Eureka dashboard
+info:
+  app:
+    name: "accounts"
+    description: "Eazy Bank Accounts application"
+    version: "1.0.0"
