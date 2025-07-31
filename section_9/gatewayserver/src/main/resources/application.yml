@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: "gatewayserver"
+  config:
+  #    here optional tells that if gateway server is unable to connect config sever,
+  #    it can still continue to start the server application.
+    import: "optional:configserver:http://localhost:8071/"
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              # Disable the default locator
+              enabled: false
+              # Tells Gateway server to Accept the service name in lower case
+              lowerCaseServiceId: true
+
+
+# Enable management related API's by activating actuator API path
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # all management endpoints instead of only refresh
+  endpoint:
+    gateway:
+      access: unrestricted
+  info:
+    env:
+      enabled: true
+
+# Application information display on Eureka dashboard
+info:
+  app:
+    name: "gatewayserver"
+    description: "Eazy Bank Gateway server application"
+    version: "1.0.0"
+
+# Logging configuration
+logging:
+  level:
+    com:
+      eazybytes:
+#        Print logger statements of DEBUG level
+        gatewayserver: DEBUG
