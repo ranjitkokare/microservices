@@ -1,0 +1,117 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: "accounts"
+  profiles:
+    active: "prod"
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ''
+  h2:
+    console:
+      enabled: true
+    jpa:
+      database-platform: org.hibernate.dialect.H2Dialect
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+  config:
+    # here optional tells that if account microservice is unable to connect config sever,
+    # it can still continue to start the microservice application.
+    import: "optional:configserver:http://localhost:8071/"
+#  Activated Resilience4j circuit breaker for all OpenFeign clients in account microservice
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
+
+# Enable management related API's by activating actuator API path
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # all management endpoints instead of only refresh
+  # tells actuator to enable the health related information
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  #  Allows us to shut down the account microservice gracefully
+  endpoint:
+    shutdown:
+      access: unrestricted
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+
+# Eureka client configuration
+eureka:
+  instance:
+    # By default, account microservice will try to register itself with hostname(DNS mapping)
+    # But here inside our local system we don't have DNS mapping, so we register it with IP address
+    preferIpAddress: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8070/eureka/
+
+
+# Application information display on Eureka dashboard
+info:
+  app:
+    name: "accounts"
+    description: "Eazy Bank Accounts application"
+    version: "1.0.0"
+
+
+# Logging configuration
+logging:
+  level:
+    com:
+      eazybytes:
+        accounts: DEBUG
+
+
+# Circuit breaker configuration
+resilience4j.circuitbreaker:
+  configs:
+    default: # apply to all circuit breakers inside microservice
+      slidingWindowSize: 10 # no. of requests to monitor to trigger circuit breaker to go in open state
+      permittedNumberOfCallsInHalfOpenState: 2 # no. of requests allowed to service in half open state to decide to go in open or closed state
+      failureRateThreshold: 50 # means at least 50% of requests should fail to go in open state
+      waitDurationInOpenState: 10000 # wait 10000ms(10 sec) for circuit breaker to go in half open state to allow partial traffic
+
+
+# Retry configuration
+resilience4j.retry:
+  configs:
+    default: # apply to all retries inside microservice
+      maxAttempts: 3
+      waitDuration: 500 # 100ms
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
+      # It will not retry with following exceptions
+      ignoreExceptions:
+        - java.lang.NullPointerException
+      # It will retry with following exceptions, in this case no need to set ignoreExceptions
+      retryExceptions:
+        - java.util.concurrent.TimeoutException
+
+
+# Rate limiter configuration
+resilience4j.ratelimiter:
+  configs:
+    default:
+      timeoutDuration: 1000 # request wait time for new quota if limit is reached
+      limitRefreshPeriod: 5000
+      limitForPeriod: 1 # allow 1 request per 5 seconds
