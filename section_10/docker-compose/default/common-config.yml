@@ -20,9 +20,6 @@ services:
   microservice-configserver-config:
     extends:
       service: microservice-base-config
-#    depends_on:
-#      configserver:
-#        condition: service_healthy
     environment:
       #   we remove optional from here because we want accounts microservice to be failed,
       #   in case if it is not connect with config server
@@ -35,8 +32,5 @@ services:
   microservice-eureka-config:
     extends:
       service: microservice-configserver-config
-#    depends_on:
-#      eurekaserver:
-#        condition: service_healthy
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka
