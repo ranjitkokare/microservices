@@ -18,6 +18,13 @@ buildNumber.properties
 *.iml
 *.ipr
 
+### Docker & Runtime Data ###
+# Ignore MinIO, DB, and container-generated files
+**/.data/
+**/.minio.sys/
+**/db-data/
+**/tmp/
+
 ### Eclipse ###
 .apt_generated
 .classpath
