@@ -90,7 +90,7 @@
                 <version>3.4.2</version>
                 <configuration>
                     <to>
-                        <image>eazybytes/${project.artifactId}:s13</image>
+                        <image>ranjitkokare/${project.artifactId}:s13</image>
                     </to>
                 </configuration>
             </plugin>
