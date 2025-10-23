@@ -1,0 +1,79 @@
+spring:
+  application:
+    name: "gatewayserver"
+  config:
+  #    here optional tells that if gateway server is unable to connect config sever,
+  #    it can still continue to start the server application.
+    import: "optional:configserver:http://localhost:8071/"
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              # Disable the default locator
+              enabled: false
+              # Tells Gateway server to Accept the service name in lower case
+              lower-case-service-id: true
+          httpclient:
+            connect-timeout: 1000
+            response-timeout: 10s # (2 sec) increased to wait for response
+  data:
+    redis:
+      connect-timeout: 2s
+      host: localhost
+      port: 6379
+      timeout: 1s
+  # JWT configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # auth server url using which resource can download the certificates during startup of this resource server application
+          jwk-set-uri: "http://localhost:7080/realms/master/protocol/openid-connect/certs"
+
+
+# Enable management related API's by activating actuator API path
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # all management endpoints instead of only refresh
+  endpoint:
+    gateway:
+      access: unrestricted
+  info:
+    env:
+      enabled: true
+  metrics: # groups metrics by application name
+    logs:
+      application: ${spring.application.name}
+
+# Application information display on Eureka dashboard
+info:
+  app:
+    name: "gatewayserver"
+    description: "Eazy Bank Gateway server application"
+    version: "1.0.0"
+
+# Logging configuration
+logging:
+  level:
+    com:
+      eazybytes:
+#        Print logger statements of DEBUG level
+        gatewayserver: DEBUG
+  # OpenTelemetry logging configuration
+  pattern:
+    # 5 length character before application name(log severity(warn, info, debug, error, trace))[Metadata Tag, Trace ID, Span ID]
+    level: "%5p [${spring.application.name},%X{trace_id},%X{span_id}]"
+
+
+# Circuit breaker configuration
+resilience4j.circuitbreaker:
+  configs:
+    default: # apply to all circuit breakers inside microservice
+      slidingWindowSize: 10 # no. of requests to monitor to trigger circuit breaker to go in open state
+      permittedNumberOfCallsInHalfOpenState: 2 # no. of requests allowed to service in half open state to decide to go in open or closed state
+      failureRateThreshold: 50 # means at least 50% of requests should fail to go in open state
+      waitDurationInOpenState: 10000 # wait 10000ms(10 sec) for circuit breaker to go in half open state to allow partial traffic
