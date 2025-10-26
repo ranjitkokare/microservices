@@ -1,0 +1,44 @@
+# Network related services which are common to all services
+# Service 1: network-deploy-service
+services:
+  network-deploy-service:
+    #   we use networks to connect multiple containers together so that they can communicate with each other
+    networks:
+      - eazybank
+
+  # Microservice related services which are common to all services
+  # Service 2: microservice-base-config
+  microservice-base-config:
+    extends:
+      service: network-deploy-service
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    environment:
+      # As we are used opentelemetry dependency in our microservices, path is as below
+      JAVA_TOOL_OPTIONS: "-javaagent:/app/libs/opentelemetry-javaagent-2.20.1.jar"
+      # OpenTelemetry will send tracing related info to tempo service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+      # we used prometheus for metrics
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+
+  # Service 3: microservice-configserver-config
+  microservice-configserver-config:
+    extends:
+      service: microservice-base-config
+    environment:
+      #   we remove optional from here because we want accounts microservice to be failed,
+      #   in case if it is not connect with config server
+      #   prefix means 1st 'configserver' must be there.
+      #   But 2nd 'configserver' is service name we can base on a service name
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: configserver:http://configserver:8071/
+
+  # Service 4: microservice-eureka-config
+  microservice-eureka-config:
+    extends:
+      service: microservice-configserver-config
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/

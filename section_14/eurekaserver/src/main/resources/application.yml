@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: "eurekaserver"
+  config:
+    import: "optional:configserver:http://localhost:8071/"
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  # tells actuator to enable the health related information
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics: # groups metrics by application name
+    tags:
+      application: ${spring.application.name}
+
+# OpenTelemetry logging configuration
+logging:
+  pattern:
+    # 5 length character before application name(log severity(warn, info, debug, error, trace))[Metadata Tag, Trace ID, Span ID]
+    level: "%5p [${spring.application.name},%X{trace_id},%X{span_id}]"
